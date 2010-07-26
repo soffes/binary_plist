@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "binary_plist"
-  s.version     = "0.0.4"
+  s.version     = "0.0.5"
   s.author      = "Sam Soffes"
   s.email       = "sam@samsoff.es"
   s.homepage    = "http://github.com/samsoffes/binary_plist"
