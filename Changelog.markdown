@@ -1,3 +1,7 @@
+### 0.0.4 (Jul 26, 2010)
+
+* Fixed ActiveSupport dependency
+
 ### 0.0.3 (Jul 26, 2010)
 
 * Fixed ASCII string encoding - closes #1
