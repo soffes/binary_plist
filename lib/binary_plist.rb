@@ -6,122 +6,118 @@ module BinaryPlist
   # Very generic type for now
   MIME_TYPE = 'application/octet-stream'
   
-  module Converter
+  # Difference between Apple and UNIX timestamps
+  DATE_EPOCH_OFFSET_APPLE_UNIX = 978307200
 
-    # Difference between Apple and UNIX timestamps
-    DATE_EPOCH_OFFSET_APPLE_UNIX = 978307200
+  # Text encoding
+  INPUT_TEXT_ENCODING = 'UTF-8'
+  PLIST_TEXT_ENCODING = 'UTF-16BE'
 
-    # Text encoding
-    INPUT_TEXT_ENCODING = 'UTF-8'
-    PLIST_TEXT_ENCODING = 'UTF-16BE'
+  # For marking strings as binary data which will be decoded as a CFData object
+  CFData = Struct.new(:data)
+
+  # Convert a Ruby data structure into a binary property list file.
+  # Works as you'd expect. Integers are limited to 4 bytes, even though the format implies longer values can be written.
+  # Strings are assumed to be in UTF-8 format. Symbols are written as strings.
+  def self.encode objects
+    write "", objects
+  end
+
+  # Alternative interface which writes data to the out object using <<
+  def self.write out, objects
+    # Find out how many objects there are, so we know how big the references are
+    count = count_objects(objects)
+    ref_format, ref_size = int_format_and_size(count)
   
-    # For marking strings as binary data which will be decoded as a CFData object
-    CFData = Struct.new(:data)
+    # Now serialize all the objects
+    values = Array.new
+    append_values(objects, values, ref_format)
   
-    # Convert a Ruby data structure into an OS X binary property list file. (.plist)
-    # Works as you'd expect. Integers are limited to 4 bytes, even though the format implies longer values can be written.
-    # Strings are assumed to be in UTF-8 format. Symbols are written as strings.
-    def self.convert(data)
-      write("", data)
+    # Write header, then the values, calculating offsets as they're written
+    out << 'bplist00'
+    offset = 8
+    offsets = Array.new
+    values.each do |v|
+      offsets << offset
+      out << v
+      offset += v.length
     end
-  
-    # Alternative interface which writes data to the out object using <<
-    def self.write(out, data)
-      # Find out how many objects there are, so we know how big the references are
-      count = count_objects(data)
-      ref_format, ref_size = int_format_and_size(count)
-    
-      # Now serialize all the objects
-      values = Array.new
-      append_values(data, values, ref_format)
-    
-      # Write header, then the values, calculating offsets as they're written
-      out << 'bplist00'
-      offset = 8
-      offsets = Array.new
-      values.each do |v|
-        offsets << offset
-        out << v
-        offset += v.length
-      end
 
-      # How big should the offset ints be?
-      # Decoder gets upset if the size can't fit the entire file, even if it's not strictly needed, so add the length of the last value.
-      offset_format, offset_size = int_format_and_size(offsets.last + values.last.length)
-    
-      # Write the offsets
-      out << offsets.pack(offset_format)
-    
-      # Write trailer
-      out << [0,0,offset_size,ref_size, 0,values.length, 0,0, 0,offset].pack("NnCCNNNNNN")
-    
-      out
-    end
+    # How big should the offset ints be?
+    # Decoder gets upset if the size can't fit the entire file, even if it's not strictly needed, so add the length of the last value.
+    offset_format, offset_size = int_format_and_size(offsets.last + values.last.length)
   
-    private
+    # Write the offsets
+    out << offsets.pack(offset_format)
   
-      def self.count_objects(data)
-        case data
+    # Write trailer
+    out << [0, 0, offset_size, ref_size, 0, values.length, 0, 0, 0, offset].pack("NnCCNNNNNN")
+  end
+
+  private
+
+    def self.count_objects object
+      case object
         when Array
-          data.inject(1) { |sum,x| sum + count_objects(x) }
+          object.inject(1) { |sum, x| sum + count_objects(x) }
+        
         when Hash
           # Note: Assumes that the keys aren't a Hash or Array
-          data.length + count_objects(data.values)
+          object.length + count_objects(object.values)
         else
           1
-        end
       end
-  
-      def self.append_values(data, values, ref_format)
-        case data
+    end
 
-        # Constant values
+    def self.append_values object, values, ref_format
+      case object
         when nil
-          # values << "\x00"
-          # raise "Can't store a nil in a binary plist. While the format supports it, decoders don't like it."
-          append_values("", values, ref_format)
+        # raise "Can't store a nil in a binary plist. While the format supports it, decoders don't like it." # values << "\x00"
+        # Instead of storing actual nil, store an empty string
+        append_values("", values, ref_format)
+        
         when false
           values << "\x08"
+        
         when true
           values << "\x09"
 
         when Integer
-          raise "Integer out of range to write in binary plist" if data < -2147483648 || data > 0x7FFFFFFF
-          values << packed_int(data)
+          raise "Integer out of range to write in binary plist" if object < -2147483648 || object > 0x7FFFFFFF
+          values << packed_int(object)
 
         when Float
-          values << "\x23#{[data].pack("d").reverse}"
+          values << "\x23#{[object].pack("d").reverse}"
 
         when Symbol
-          append_values(data.to_s, values, ref_format)
+          append_values(object.to_s, values, ref_format)
 
         when String
-          if data =~ /[\x80-\xff]/
+          if object =~ /[\x80-\xff]/
             # Has high bits set, so is UTF-8 and must be reencoded for the plist file
-            c = Iconv.iconv(PLIST_TEXT_ENCODING, INPUT_TEXT_ENCODING, data).join
-            values << "#{objhdr_with_length(0x60, c.length / 2)}#{c}"
+            object = Iconv.iconv(PLIST_TEXT_ENCODING, INPUT_TEXT_ENCODING, object).join
+            values << objhdr_with_length(0x60, object.length / 2)
           else
             # Just ASCII
-            o = objhdr_with_length(0x50, data.length)
-            o << data
-            values << o
+            values << objhdr_with_length(0x50, object.length)
           end
+          values << object
 
         when CFData
-          o = objhdr_with_length(0x40, data.data.length)
-          o << data.data
+          o = objhdr_with_length(0x40, object.data.length)
+          o << object.data
           values << o
 
         when Time
-          v = data.getutc.to_f - DATE_EPOCH_OFFSET_APPLE_UNIX
+          v = object.getutc.to_f - DATE_EPOCH_OFFSET_APPLE_UNIX
           values << "\x33#{[v].pack("d").reverse}"
 
         when Hash
-          o = objhdr_with_length(0xd0, data.length)
+          o = objhdr_with_length(0xd0, object.length)
           values << o # now, so we get the refs of other objects right
           ks = Array.new
           vs = Array.new
-          data.each do |k,v|
+          object.each do |k, v|
             ks << values.length
             append_values(k, values, ref_format)
             vs << values.length
@@ -131,10 +127,10 @@ module BinaryPlist
           o << vs.pack(ref_format)
 
         when Array
-          o = objhdr_with_length(0xa0, data.length)
+          o = objhdr_with_length(0xa0, object.length)
           values << o # now, so we get the refs of other objects right
           refs = Array.new
-          data.each do |e|
+          object.each do |e|
             refs << values.length # index in array of object we're about to write
             append_values(e, values, ref_format)
           end
@@ -142,38 +138,37 @@ module BinaryPlist
 
         else
           raise "Couldn't serialize value of class #{data.class.name}"
-        end
       end
-  
-      def self.int_format_and_size(i)
-        if i > 0xffff
-          ['N*',4]
-        elsif i > 0xff
-          ['n*',2]
-        else
-          ['C*',1]
-        end
-      end
+    end
 
-      def self.packed_int(data)
-        if data < 0
-          # Need to use 64 bits for negative numbers.
-          [0x13,0xffffffff,data].pack("CNN")
-        elsif data > 0xffff
-          [0x12,data].pack("CN")
-        elsif data > 0xff
-          [0x11,data].pack("Cn")
-        else
-          [0x10,data].pack("CC")
-        end
+    def self.int_format_and_size(i)
+      if i > 0xffff
+        ['N*',4]
+      elsif i > 0xff
+        ['n*',2]
+      else
+        ['C*',1]
       end
-    
-      def self.objhdr_with_length(id, length)
-        if length < 0xf
-          (id + length).chr
-        else
-          (id + 0xf).chr + packed_int(length)
-        end
+    end
+
+    def self.packed_int integer
+      if integer < 0
+        # Need to use 64 bits for negative numbers.
+        [0x13, 0xffffffff, integer].pack("CNN")
+      elsif integer > 0xffff
+        [0x12, integer].pack("CN")
+      elsif integer > 0xff
+        [0x11, integer].pack("Cn")
+      else
+        [0x10, integer].pack("CC")
       end
-  end
+    end
+  
+    def self.objhdr_with_length id, length
+      if length < 0xf
+        (id + length).chr
+      else
+        (id + 0xf).chr + packed_int(length)
+      end
+    end
 end

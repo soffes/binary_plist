@@ -7,5 +7,5 @@ ActionController::Renderers.add :bplist do |data, options|
   data = ActiveSupport::JSON.decode(ActiveSupport::JSON.encode(data, options))
   
   self.content_type ||= Mime::BPLIST
-  self.response_body = BinaryPlist::Converter.convert(data)
+  self.response_body = BinaryPlist.encode(data)
 end
