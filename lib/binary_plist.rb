@@ -19,19 +19,19 @@ module BinaryPlist
   # Convert a Ruby data structure into a binary property list file.
   # Works as you'd expect. Integers are limited to 4 bytes, even though the format implies longer values can be written.
   # Strings are assumed to be in UTF-8 format. Symbols are written as strings.
-  def self.encode objects
-    write "", objects
+  def self.encode object
+    write "", object
   end
 
   # Alternative interface which writes data to the out object using <<
-  def self.write out, objects
+  def self.write out, object
     # Find out how many objects there are, so we know how big the references are
-    count = count_objects(objects)
+    count = count_objects(object)
     ref_format, ref_size = int_format_and_size(count)
   
     # Now serialize all the objects
     values = Array.new
-    append_values(objects, values, ref_format)
+    append_values(object, values, ref_format)
   
     # Write header, then the values, calculating offsets as they're written
     out << 'bplist00'
@@ -83,7 +83,7 @@ module BinaryPlist
           values << "\x09"
 
         when Integer
-          raise "Integer out of range to write in binary plist" if object < -2147483648 || object > 0x7FFFFFFF
+          raise "Integer out of range to write in binary plist: #{objet}" if object < -2147483648 || object > 0x7FFFFFFF
           values << packed_int(object)
 
         when Float
@@ -124,6 +124,7 @@ module BinaryPlist
           end
           o << ks.pack(ref_format)
           o << vs.pack(ref_format)
+    
 
         when Array
           o = objhdr_with_length(0xa0, object.length)

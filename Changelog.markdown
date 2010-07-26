@@ -1,4 +1,6 @@
-* Fixed ASCII string encoding
+### 0.0.3 (Jul 26, 2010)
+
+* Fixed ASCII string encoding - closes #1
 
 ### 0.0.2 (Jul 25, 2010)
 

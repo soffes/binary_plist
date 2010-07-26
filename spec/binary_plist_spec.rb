@@ -19,6 +19,8 @@ describe BinaryPlist, "encode" do
   
   it "encodes a large integer"
   
+  it "can't encode crazy large integers"
+  
   it "encodes a float" do
     encode(3.14159265).should == plist("float")
   end
@@ -44,7 +46,7 @@ describe BinaryPlist, "encode" do
   it "encodes a datetime"
   
   it "encodes a hash" do
-    encode(["name" => "Sam Soffes", "website" => "http://samsoff.es"]).should == plist("hash")
+    encode({ "name" => "Sam", "color" => "blue" }).should == plist("hash")
   end
   
   it "encodes an array" do
