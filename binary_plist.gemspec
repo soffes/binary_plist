@@ -11,6 +11,6 @@ Gem::Specification.new do |s|
   s.files        = Dir["{lib}/**/*", "[A-Z]*", "init.rb"]
   s.require_path = "lib"
   
-  s.add_dependency("activesupport", "~> 2.0")
+  s.add_dependency("activesupport", "> 2.0")
   s.add_development_dependency("rspec", "1.3.0")
 end
