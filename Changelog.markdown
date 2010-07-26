@@ -1,3 +1,5 @@
+### 0.0.2 (Jul 25, 2010)
+
 * Cleaned up converter
 * Changed to more standard `.plist` extension
 * Added basic specs
