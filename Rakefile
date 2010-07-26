@@ -7,7 +7,7 @@ spec_files = Rake::FileList["spec/*_spec.rb"]
 desc "Run specs"
 Spec::Rake::SpecTask.new do |t|
   t.spec_files = spec_files
-  t.spec_opts = ["-c"]
+  t.spec_opts = ['--color', '--format=specdoc']
 end
 
 task :default => :spec

@@ -17,7 +17,7 @@ describe BinaryPlist, "encode" do
     encode(42).should == plist("integer")
   end
   
-  it "encodes a 64-bit integer"
+  it "encodes a large integer"
   
   it "encodes a float" do
     encode(3.14159265).should == plist("float")
@@ -31,6 +31,10 @@ describe BinaryPlist, "encode" do
     encode("Hello World").should == plist("string")
   end
   
+  it "encodes a crazy string" do
+    encode("This is ç®áz¥").should == plist("crazy_string")
+  end
+  
   it "encodes some data"
   
   it "encodes a time"
@@ -40,11 +44,15 @@ describe BinaryPlist, "encode" do
   it "encodes a datetime"
   
   it "encodes a hash" do
-    encode(["name" => "Sam", "twitter" => "@samsoffes"]).should == plist("hash")
+    encode(["name" => "Sam Soffes", "website" => "http://samsoff.es"]).should == plist("hash")
   end
   
   it "encodes an array" do
     encode(["Oranges", "Apples", "Grapes"]).should == plist("array")
+  end
+  
+  it "can't encode unknown objects" do
+    lambda { encode(Object.new) }.should raise_error
   end
   
 end

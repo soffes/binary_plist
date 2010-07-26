@@ -1,3 +1,5 @@
+* Fixed ASCII string encoding
+
 ### 0.0.2 (Jul 25, 2010)
 
 * Cleaned up converter

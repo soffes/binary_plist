@@ -95,13 +95,12 @@ module BinaryPlist
         when String
           if object =~ /[\x80-\xff]/
             # Has high bits set, so is UTF-8 and must be reencoded for the plist file
-            object = Iconv.iconv(PLIST_TEXT_ENCODING, INPUT_TEXT_ENCODING, object).join
-            values << objhdr_with_length(0x60, object.length / 2)
+            c = Iconv.iconv(PLIST_TEXT_ENCODING, INPUT_TEXT_ENCODING, object).join
+            values << objhdr_with_length(0x60, c.length / 2) + c
           else
             # Just ASCII
-            values << objhdr_with_length(0x50, object.length)
+            values << objhdr_with_length(0x50, object.length) + object
           end
-          values << object
 
         when CFData
           o = objhdr_with_length(0x40, object.data.length)
@@ -117,7 +116,7 @@ module BinaryPlist
           values << o # now, so we get the refs of other objects right
           ks = Array.new
           vs = Array.new
-          object.each do |k, v|
+          object.each do |k,v|
             ks << values.length
             append_values(k, values, ref_format)
             vs << values.length
@@ -143,11 +142,11 @@ module BinaryPlist
 
     def self.int_format_and_size(i)
       if i > 0xffff
-        ['N*',4]
+        ['N*', 4]
       elsif i > 0xff
-        ['n*',2]
+        ['n*', 2]
       else
-        ['C*',1]
+        ['C*', 1]
       end
     end
 
