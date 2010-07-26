@@ -1,3 +1,7 @@
+* Added Railtie
+* Added support for `:plist` with `respond_with`
+* Added `to_plist` method to supported classes
+
 ### 0.0.4 (Jul 26, 2010)
 
 * Fixed ActiveSupport dependency

@@ -54,4 +54,8 @@ You can also use the more flexible syntax:
 	    // Etc...
 	}
 
+## Thanks
+
+The encoder is largely based on [Apple Binary Property List serializer](http://gist.github.com/303378).
+
 Copyright (c) 2010 Sam Soffes, released under the MIT license
