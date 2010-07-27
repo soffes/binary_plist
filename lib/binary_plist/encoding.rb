@@ -7,15 +7,17 @@ module BinaryPlist
   end
 
   module Encoding
+    # For marking strings as binary data which will be decoded as a CFData object
+    CFData = Struct.new(:data)
+    
+    SUPPORTED_CLASSES = [NilClass, FalseClass, TrueClass, Integer, Float, Symbol, String, CFData, Time, Date, DateTime, Hash, Array]
+    
     # Difference between Apple and UNIX timestamps
     DATE_EPOCH_OFFSET_APPLE_UNIX = 978307200
 
     # Text encoding
     INPUT_TEXT_ENCODING = 'UTF-8'
     PLIST_TEXT_ENCODING = 'UTF-16BE'
-
-    # For marking strings as binary data which will be decoded as a CFData object
-    CFData = Struct.new(:data)
     
     # Convert a Ruby data structure into a binary property list file.
     # Works as you'd expect. Integers are limited to 4 bytes, even though the format implies longer values can be written.
@@ -84,7 +86,7 @@ module BinaryPlist
             values << "\x09"
 
           when Integer
-            raise "Integer out of range to write in binary plist: #{objet}" if object < -2147483648 || object > 0x7FFFFFFF
+            raise "Integer out of range to write in binary plist: #{object}" if object < -2147483648 || object > 0x7FFFFFFF
             values << packed_int(object)
 
           when Float
@@ -111,6 +113,14 @@ module BinaryPlist
           when Time
             v = object.getutc.to_f - DATE_EPOCH_OFFSET_APPLE_UNIX
             values << "\x33#{[v].pack("d").reverse}"
+            
+          when Date
+            time = Time.utc(object.year, object.month, object.day, 0, 0, 0)
+            append_values(time, values, ref_format)
+            
+          when DateTime
+            time = Time.utc(object.year, object.month, object.day, object.hour, object.min, object.sec)
+            append_values(time, values, ref_format)
 
           when Hash
             o = objhdr_with_length(0xd0, object.length)
