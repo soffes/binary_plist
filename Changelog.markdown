@@ -1,4 +1,4 @@
-* Support for Date and DateTime
+* Support for `Date` and `DateTime`
 * Improved tests
 
 ### 0.0.5 (Jul 26, 2010)
