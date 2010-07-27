@@ -27,12 +27,12 @@ describe BinaryPlist, "encode" do
     3.14159265.to_plist.should == plist("float")
   end
   
-  it "encodes a symbol" do
-    :"Hello World".to_plist.should == plist("string")
-  end
-  
   it "encodes a string" do
     "Hello World".to_plist.should == plist("string")
+  end
+  
+  it "encodes a symbol" do
+    :"Hello World".to_plist.should == plist("string")
   end
   
   it "encodes a crazy string" do
@@ -54,13 +54,13 @@ describe BinaryPlist, "encode" do
     DateTime.new(2010, 3, 13, 12, 23, 42).to_plist == plist("time")
   end
   
-  it "encodes a hash" do
-    { "name" => "Sam", "color" => "blue" }.to_plist.should == plist("hash")
-  end
-  
   it "encodes a date" do
     require "date"
     Date.new(2010, 7, 4).to_plist == plist("date")
+  end
+  
+  it "encodes a hash" do
+    { "name" => "Sam", "color" => "blue" }.to_plist.should == plist("hash")
   end
   
   it "encodes an array" do
