@@ -1,4 +1,5 @@
 require "iconv"
+require "date"
 
 module BinaryPlist
   
