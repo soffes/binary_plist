@@ -1,5 +1,5 @@
 require "rubygems"
-require "spec"
+require "rspec"
 require "binary_plist"
 
 # Loads a plist file from the spec directory

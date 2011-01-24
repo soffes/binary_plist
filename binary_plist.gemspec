@@ -12,5 +12,5 @@ Gem::Specification.new do |s|
   s.require_path = "lib"
   
   s.add_dependency("activesupport", "> 2.0")
-  s.add_development_dependency("rspec", "1.3.0")
+  s.add_development_dependency("rspec", "2.4.0")
 end

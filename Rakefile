@@ -1,13 +1,13 @@
-require "rubygems"
-require "rake"
-require "spec/rake/spectask"
+require 'rubygems'
+require 'rake'
+require 'rspec/core/rake_task'
 
-spec_files = Rake::FileList["spec/*_spec.rb"]
+spec_files = Rake::FileList['spec/*_spec.rb']
 
-desc "Run specs"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_files = spec_files
-  t.spec_opts = ['--color', '--format=specdoc']
+desc 'Run specs'
+RSpec::Core::RakeTask.new(:spec) do |t|
+  # t.spec_files = FileList['spec/*_spec.rb']
+  t.rspec_opts = ['--color']
 end
 
 task :default => :spec
