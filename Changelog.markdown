@@ -1,3 +1,4 @@
+* Improved Railtie
 * Support for `Date` and `DateTime`
 * Improved tests
 

@@ -128,7 +128,7 @@ module BinaryPlist
             values << o # now, so we get the refs of other objects right
             ks = Array.new
             vs = Array.new
-            object.each do |k,v|
+            object.each do |k, v|
               ks << values.length
               append_values(k, values, ref_format)
               vs << values.length
