@@ -1,6 +1,6 @@
-require "rubygems"
-require "rspec"
-require "binary_plist"
+require 'rubygems'
+require 'rspec'
+require 'binary_plist'
 
 # Loads a plist file from the spec directory
 # These were created using Apple's Property List Editor

@@ -1,5 +1,5 @@
-require "iconv"
-require "date"
+require 'iconv'
+require 'date'
 
 module BinaryPlist
   
@@ -24,7 +24,7 @@ module BinaryPlist
     # Works as you'd expect. Integers are limited to 4 bytes, even though the format implies longer values can be written.
     # Strings are assumed to be in UTF-8 format. Symbols are written as strings.
     def self.encode object
-      write "", object
+      write '', object
     end
 
     # Alternative interface which writes data to the out object using <<
@@ -55,7 +55,7 @@ module BinaryPlist
       out << offsets.pack(offset_format)
 
       # Write trailer
-      out << [0, 0, offset_size, ref_size, 0, values.length, 0, 0, 0, offset].pack("NnCCNNNNNN")
+      out << [0, 0, offset_size, ref_size, 0, values.length, 0, 0, 0, offset].pack('NnCCNNNNNN')
     end
 
     private
@@ -78,7 +78,7 @@ module BinaryPlist
           when nil
           # raise "Can't store a nil in a binary plist. While the format supports it, decoders don't like it." # values << "\x00"
           # Instead of storing actual nil, store an empty string
-          append_values("", values, ref_format)
+          append_values('', values, ref_format)
 
           when false
             values << "\x08"
@@ -91,7 +91,7 @@ module BinaryPlist
             values << packed_int(object)
 
           when Float
-            values << "\x23#{[object].pack("d").reverse}"
+            values << "\x23#{[object].pack('d').reverse}"
 
           when Symbol
             append_values(object.to_s, values, ref_format)
@@ -113,7 +113,7 @@ module BinaryPlist
 
           when Time
             v = object.getutc.to_f - DATE_EPOCH_OFFSET_APPLE_UNIX
-            values << "\x33#{[v].pack("d").reverse}"
+            values << "\x33#{[v].pack('d').reverse}"
             
           when Date
             time = Time.utc(object.year, object.month, object.day, 0, 0, 0)
@@ -166,13 +166,13 @@ module BinaryPlist
       def self.packed_int integer
         if integer < 0
           # Need to use 64 bits for negative numbers.
-          [0x13, 0xffffffff, integer].pack("CNN")
+          [0x13, 0xffffffff, integer].pack('CNN')
         elsif integer > 0xffff
-          [0x12, integer].pack("CN")
+          [0x12, integer].pack('CN')
         elsif integer > 0xff
-          [0x11, integer].pack("Cn")
+          [0x11, integer].pack('Cn')
         else
-          [0x10, integer].pack("CC")
+          [0x10, integer].pack('CC')
         end
       end
 
