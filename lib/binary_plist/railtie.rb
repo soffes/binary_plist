@@ -7,8 +7,12 @@ module BinaryPlist
     require 'rails'
     class Railtie < Rails::Railtie
       initializer 'binary_plist.add_plist_responder' do
-        ActiveSupport.on_load :active_record do
+        if defined? Mongoid
           BinaryPlist::Railtie.insert
+        else
+          ActiveSupport.on_load :active_record do
+            BinaryPlist::Railtie.insert
+          end
         end
       end
     end
