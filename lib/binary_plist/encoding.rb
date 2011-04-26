@@ -13,6 +13,11 @@ module BinaryPlist
     
     SUPPORTED_CLASSES = [NilClass, FalseClass, TrueClass, Integer, Float, Symbol, String, CFData, Time, Date, DateTime, Hash, Array]
     
+    # Mongoid support
+    if defined? BSON::ObjectId
+      SUPPORTED_CLASSES.push BSON::ObjectId
+    end
+    
     # Difference between Apple and UNIX timestamps
     DATE_EPOCH_OFFSET_APPLE_UNIX = 978307200
 
@@ -76,9 +81,9 @@ module BinaryPlist
       def self.append_values object, values, ref_format
         case object
           when nil
-          # raise "Can't store a nil in a binary plist. While the format supports it, decoders don't like it." # values << "\x00"
-          # Instead of storing actual nil, store an empty string
-          append_values('', values, ref_format)
+            # raise "Can't store a nil in a binary plist. While the format supports it, decoders don't like it." # values << "\x00"
+            # Instead of storing actual nil, store an empty string
+            append_values('', values, ref_format)
 
           when false
             values << "\x08"
@@ -148,8 +153,11 @@ module BinaryPlist
             end
             o << refs.pack(ref_format)
 
+          when BSON::ObjectId
+            append_values(object.to_s, values, ref_format)
+
           else
-            raise "Couldn't serialize value of class #{data.class.name}"
+            raise "Couldn't serialize value of class #{object.class.name}"
         end
       end
 
