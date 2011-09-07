@@ -1,3 +1,5 @@
+* Improved encoding (still broken in 1.9.2)
+* Added Gemfile for dependencies
 * Improved Railtie
 * Support for `Date` and `DateTime`
 * Improved tests

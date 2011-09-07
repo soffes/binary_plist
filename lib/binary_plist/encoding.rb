@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'iconv'
 require 'date'
 
@@ -39,13 +40,13 @@ module BinaryPlist
       ref_format, ref_size = int_format_and_size(count)
 
       # Now serialize all the objects
-      values = Array.new
+      values = []
       append_values(object, values, ref_format)
 
       # Write header, then the values, calculating offsets as they're written
       out << 'bplist00'
       offset = 8
-      offsets = Array.new
+      offsets = []
       values.each do |v|
         offsets << offset
         out << v
@@ -64,6 +65,12 @@ module BinaryPlist
     end
 
     private
+      
+      def self.ic string
+        Iconv.iconv(PLIST_TEXT_ENCODING, INPUT_TEXT_ENCODING, string)
+        @@ic ||= Iconv.new(PLIST_TEXT_ENCODING, INPUT_TEXT_ENCODING)
+        @@ic.iconv(string + ' ')[0..-3]
+      end
 
       def self.count_objects object
         case object
@@ -104,8 +111,8 @@ module BinaryPlist
           when String
             if object =~ /[\x80-\xff]/
               # Has high bits set, so is UTF-8 and must be reencoded for the plist file
-              c = Iconv.iconv(PLIST_TEXT_ENCODING, INPUT_TEXT_ENCODING, object).join
-              values << objhdr_with_length(0x60, c.length / 2) + c
+              string = self.ic(object)
+              values << objhdr_with_length(0x60, string.length / 2) + string
             else
               # Just ASCII
               values << objhdr_with_length(0x50, object.length) + object
@@ -131,8 +138,8 @@ module BinaryPlist
           when Hash
             o = objhdr_with_length(0xd0, object.length)
             values << o # now, so we get the refs of other objects right
-            ks = Array.new
-            vs = Array.new
+            ks = []
+            vs = []
             object.each do |k, v|
               ks << values.length
               append_values(k, values, ref_format)
@@ -146,7 +153,7 @@ module BinaryPlist
           when Array
             o = objhdr_with_length(0xa0, object.length)
             values << o # now, so we get the refs of other objects right
-            refs = Array.new
+            refs = []
             object.each do |e|
               refs << values.length # index in array of object we're about to write
               append_values(e, values, ref_format)
