@@ -4,5 +4,5 @@ require 'binary_plist/railtie'
 require 'iconv'
 
 module BinaryPlist
-  MIME_TYPE = 'application/octet-stream'
+  MIME_TYPE = 'application/x-plist'
 end
